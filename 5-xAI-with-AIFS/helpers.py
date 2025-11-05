@@ -1,5 +1,6 @@
 import datetime
 import logging
+import subprocess
 from collections import defaultdict
 from pathlib import Path
 
@@ -18,6 +19,29 @@ PARAM_SOIL = ["vsw", "sot"]
 PARAM_PL = ["gh", "t", "u", "v", "w", "q"]
 LEVELS = [1000, 925, 850, 700, 600, 500, 400, 300, 250, 200, 150, 100, 50]
 SOIL_LEVELS = [1, 2]
+
+
+def load_ckpt(grid_resolution: str) -> str:
+    assert grid_resolution in ["O96"], "Grid resolution must be O96"
+    url = f"https://object-store.os-api.cci1.ecmwf.int/ml-tests/test-data/samples/training-course/inference-aifs-{grid_resolution.lower()}.ckpt"
+
+    ckpt_file = Path("checkpoints") / f"aifs-global-{grid_resolution.lower()}.ckpt"
+
+    # Create the output directory
+    ckpt_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # Download the checkpoint
+    if not Path(ckpt_file).exists():
+        process = subprocess.run(
+            ["wget", url, "-O", ckpt_file],
+            capture_output=True,
+            text=True
+        )
+        print(process.stdout)
+        print(process.stderr)
+    else:
+        print(f"Checkpoint already exists in {ckpt_file}")
+    return str(ckpt_file)
 
 
 def load_saved_state(file) -> dict:
